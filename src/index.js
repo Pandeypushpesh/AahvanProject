@@ -15,7 +15,7 @@ dotenv.config({ path: "./.env" });
 const app = express();
 
 // ---------------------
-// 🔒 Security Middlewares
+// Security Middlewares
 // ---------------------
 app.use(helmet()); // Sets HTTP security headers
 app.use(
@@ -28,7 +28,7 @@ app.use(
 app.use(express.json({ limit: "10kb" })); // Prevent large payloads
 
 // ---------------------
-// 🚦 Rate Limiter (to prevent abuse / DDoS)
+// Rate Limiter (to prevent abuse / DDoS)
 // ---------------------
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -39,7 +39,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // ---------------------
-// 🧠 Environment Validation
+// Environment Validation
 // ---------------------
 const requiredEnv = ["MONGODB_URI", "PORT", "JWT_SECRET"];
 requiredEnv.forEach((key) => {
@@ -50,7 +50,7 @@ requiredEnv.forEach((key) => {
 });
 
 // ---------------------
-// 🧩 Database Connection
+// Database Connection
 // ---------------------
 const connectDB = async () => {
   try {
@@ -68,7 +68,7 @@ const connectDB = async () => {
 connectDB();
 
 // ---------------------
-// 🌐 Sample Routes
+// Sample Routes
 // ---------------------
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -82,7 +82,7 @@ app.get("/", (req, res) => {
 // app.use("/api/users", userRoutes);
 
 // ---------------------
-// ⚙️ Server Initialization
+// Server Initialization
 // ---------------------
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
@@ -90,7 +90,7 @@ const server = app.listen(PORT, () => {
 });
 
 // ---------------------
-// 🧹 Graceful Shutdown
+// Graceful Shutdown
 // ---------------------
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err.message);
