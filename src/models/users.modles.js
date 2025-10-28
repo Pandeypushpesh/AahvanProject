@@ -2,120 +2,148 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 // ----------------------------
-//  User Schema Definition
+// Registration Schema
 // ----------------------------
-const userSchema = new mongoose.Schema(
+const registrationSchema = new mongoose.Schema(
   {
+    registrationId: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+
     firstName: {
       type: String,
-      required: [true, "First name is required"],
+      required: true,
       trim: true,
-      maxlength: 50,
     },
+
     lastName: {
       type: String,
-      required: [true, "Last name is required"],
+      required: true,
       trim: true,
-      maxlength: 50,
     },
+
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
-      required: [true, "Gender is required"],
+      required: true,
     },
+
     mobile: {
       type: String,
-      required: [true, "Mobile number is required"],
+      required: true,
       unique: true,
-      match: [/^[6-9]\d{9}$/, "Please enter a valid mobile number"],
+      match: /^[0-9]{10}$/,
     },
+
     alternateMobile: {
       type: String,
-      match: [/^[6-9]\d{9}$/, "Please enter a valid alternate mobile number"],
+      match: /^[0-9]{10}$/,
     },
+
     email: {
       type: String,
-      required: [true, "Email is required"],
+      required: true,
       unique: true,
       lowercase: true,
-      match: [/\S+@\S+\.\S+/, "Please enter a valid email address"],
+      trim: true,
+      match: /^\S+@\S+\.\S+$/,
     },
-    password: {
-      type: String,
-      minlength: [6, "Password must be at least 6 characters long"],
-      select: false, // prevents password from being returned in queries
-    },
+
     dateOfBirth: {
       type: Date,
-      required: [true, "Date of birth is required"],
+      required: true,
     },
+
     address: {
-      house: { type: String, required: true },
-      locality: { type: String, required: true },
-      district: { type: String, required: true },
-      state: { type: String, required: true },
-      city: { type: String, required: true },
-      pincode: {
-        type: String,
-        required: true,
-        match: [/^\d{6}$/, "Please enter a valid 6-digit pincode"],
-      },
+      house: { type: String, trim: true },
+      locality: { type: String, trim: true },
+      district: { type: String, trim: true },
+      state: { type: String, trim: true },
+      city: { type: String, trim: true },
+      pincode: { type: String, match: /^[1-9][0-9]{5}$/ },
       country: { type: String, default: "India" },
     },
+
     education: {
       type: String,
-      required: [true, "Education field is required"],
+      required: true,
     },
+
     profession: {
       type: String,
-      required: [true, "Profession field is required"],
+      required: true,
     },
+
     previousAssociation: {
       type: String,
-      default: "None",
     },
+
     volunteerPrograms: {
       type: [String],
       default: [],
     },
+
+    otpVerifiedPhone: {
+      type: Boolean,
+      default: false,
+    },
+
+    otpVerifiedEmail: {
+      type: Boolean,
+      default: false,
+    },
+
+    paymentAmount: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+
     paymentStatus: {
       type: String,
-      enum: ["pending", "completed", "failed"],
-      default: "pending",
+      enum: ["Success", "Pending", "Failed"],
+      default: "Pending",
+    },
+
+    paymentId: {
+      type: String,
+      trim: true,
+    },
+
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
   },
   { timestamps: true }
 );
 
 // ----------------------------
-// Password Encryption Hook
+// Auto-generate Registration ID
+// Example: AHV2025-00001
 // ----------------------------
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password") || !this.password) return next();
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
+registrationSchema.pre("save", async function (next) {
+  if (this.isNew) {
+    const count = await mongoose.model("Registration").countDocuments();
+    this.registrationId = `AHV${new Date().getFullYear()}-${(count + 1)
+      .toString()
+      .padStart(5, "0")}`;
   }
+  next();
 });
 
 // ----------------------------
-// Password Comparison Method
+// Indexes for Query Optimization
 // ----------------------------
-userSchema.methods.comparePassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
+registrationSchema.index({ email: 1 });
+registrationSchema.index({ mobile: 1 });
+registrationSchema.index({ registrationId: 1 });
 
 // ----------------------------
-// Indexes for Query Speed
+// Export Model
 // ----------------------------
-userSchema.index({ email: 1 });
-userSchema.index({ mobile: 1 });
-
-// ----------------------------
-//Export Model
-// ----------------------------
-const User = mongoose.model("User", userSchema);
-export default User;
+const Registration = mongoose.model("Registration", registrationSchema);
+export default Registration;
