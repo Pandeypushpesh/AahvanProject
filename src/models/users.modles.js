@@ -2,7 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 
 // ----------------------------
-// 🧩 User Schema Definition
+//  User Schema Definition
 // ----------------------------
 const userSchema = new mongoose.Schema(
   {
@@ -88,7 +88,7 @@ const userSchema = new mongoose.Schema(
 );
 
 // ----------------------------
-// 🔒 Password Encryption Hook
+// Password Encryption Hook
 // ----------------------------
 userSchema.pre("save", async function (next) {
   if (!this.isModified("password") || !this.password) return next();
@@ -102,20 +102,20 @@ userSchema.pre("save", async function (next) {
 });
 
 // ----------------------------
-// 🔑 Password Comparison Method
+// Password Comparison Method
 // ----------------------------
 userSchema.methods.comparePassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
 // ----------------------------
-// ⚙️ Indexes for Query Speed
+// Indexes for Query Speed
 // ----------------------------
 userSchema.index({ email: 1 });
 userSchema.index({ mobile: 1 });
 
 // ----------------------------
-// ✅ Export Model
+//Export Model
 // ----------------------------
 const User = mongoose.model("User", userSchema);
 export default User;
