@@ -1,16 +1,22 @@
 import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
 
+// ----------------------------
+// 🧩 User Schema Definition
+// ----------------------------
 const userSchema = new mongoose.Schema(
   {
     firstName: {
       type: String,
       required: [true, "First name is required"],
       trim: true,
+      maxlength: 50,
     },
     lastName: {
       type: String,
       required: [true, "Last name is required"],
       trim: true,
+      maxlength: 50,
     },
     gender: {
       type: String,
@@ -33,6 +39,11 @@ const userSchema = new mongoose.Schema(
       unique: true,
       lowercase: true,
       match: [/\S+@\S+\.\S+/, "Please enter a valid email address"],
+    },
+    password: {
+      type: String,
+      minlength: [6, "Password must be at least 6 characters long"],
+      select: false, // prevents password from being returned in queries
     },
     dateOfBirth: {
       type: Date,
@@ -76,5 +87,35 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ----------------------------
+// 🔒 Password Encryption Hook
+// ----------------------------
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password") || !this.password) return next();
+  try {
+    const salt = await bcrypt.genSalt(10);
+    this.password = await bcrypt.hash(this.password, salt);
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
+
+// ----------------------------
+// 🔑 Password Comparison Method
+// ----------------------------
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  return await bcrypt.compare(enteredPassword, this.password);
+};
+
+// ----------------------------
+// ⚙️ Indexes for Query Speed
+// ----------------------------
+userSchema.index({ email: 1 });
+userSchema.index({ mobile: 1 });
+
+// ----------------------------
+// ✅ Export Model
+// ----------------------------
 const User = mongoose.model("User", userSchema);
 export default User;
