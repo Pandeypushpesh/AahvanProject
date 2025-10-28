@@ -1,3 +1,6 @@
+// ---------------------
+// Core Imports
+// ---------------------
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -5,11 +8,9 @@ import rateLimit from "express-rate-limit";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 
-// import dotenv from "dotenv";
-// dotenv.config();
-
-
-// Load environment variables
+// ---------------------
+// Load Environment Variables
+// ---------------------
 dotenv.config({ path: "./.env" });
 
 const app = express();
@@ -17,7 +18,8 @@ const app = express();
 // ---------------------
 // Security Middlewares
 // ---------------------
-app.use(helmet()); // Sets HTTP security headers
+app.use(helmet()); // Secure HTTP headers
+
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "*",
@@ -25,14 +27,15 @@ app.use(
     credentials: true,
   })
 );
+
 app.use(express.json({ limit: "10kb" })); // Prevent large payloads
 
 // ---------------------
-// Rate Limiter (to prevent abuse / DDoS)
+// Rate Limiting (to avoid abuse or DDoS)
 // ---------------------
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // limit each IP to 100 requests per windowMs
+  max: 100, // Limit each IP to 100 requests per window
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -50,14 +53,11 @@ requiredEnv.forEach((key) => {
 });
 
 // ---------------------
-// Database Connection
+// MongoDB Connection
 // ---------------------
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    const conn = await mongoose.connect(process.env.MONGODB_URI);
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     console.error("❌ Database connection failed:", error.message);
@@ -68,7 +68,14 @@ const connectDB = async () => {
 connectDB();
 
 // ---------------------
-// Sample Routes
+// Import Routes
+// ---------------------
+import registrationRoutes from "./routes/registration.routes.js";
+
+app.use("/api/registrations", registrationRoutes);
+
+// ---------------------
+// Default Route
 // ---------------------
 app.get("/", (req, res) => {
   res.status(200).json({
@@ -76,10 +83,6 @@ app.get("/", (req, res) => {
     message: "🚀 Ahvaan Telecom Backend is running successfully!",
   });
 });
-
-// Example: import your routes later
-// import userRoutes from "./routes/user.routes.js";
-// app.use("/api/users", userRoutes);
 
 // ---------------------
 // Server Initialization
@@ -90,7 +93,7 @@ const server = app.listen(PORT, () => {
 });
 
 // ---------------------
-// Graceful Shutdown
+// Graceful Shutdown Handlers
 // ---------------------
 process.on("unhandledRejection", (err) => {
   console.error("❌ Unhandled Rejection:", err.message);
